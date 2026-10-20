@@ -10,9 +10,9 @@ const site = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 export const metadata = {
   metadataBase: new URL(site),
-  title: "Boulevard City — Samarqand, Muqimiy 48 | Xonadonlar 3D ko'rinishda",
-  description: "Boulevard City turar joy majmuasi: 1, 2, 3 va 4 xonali xonadonlar, terrasali penthauslar, podval avtoturargohi va basseyn. Har bir xonadonni 3D ko'rinishda tanlang.",
-  openGraph: { title: "Boulevard City — Samarqand", description: "Xonadonlarni 3D ko'rinishda tanlang. Muqimiy ko'chasi, 48.", locale: "uz_UZ", type: "website" },
+  title: "Tamerlan — Samarqand, Muqimiy 48 | Xonadonlar 3D ko'rinishda",
+  description: "Tamerlan turar joy majmuasi: 1, 2, 3 va 4 xonali xonadonlar, terrasali penthauslar, podval avtoturargohi va basseyn. Har bir xonadonni 3D ko'rinishda tanlang.",
+  openGraph: { title: "Tamerlan — Samarqand", description: "Xonadonlarni 3D ko'rinishda tanlang. Muqimiy ko'chasi, 48.", locale: "uz_UZ", type: "website" },
 };
 
 export const viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: "#032a25" };

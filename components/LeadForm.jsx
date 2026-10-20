@@ -47,7 +47,7 @@ export default function LeadForm({ variant }) {
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok || !j.ok) throw new Error(j.error || "xato");
-      track("Lead", { content_name: apt || "Boulevard City", content_category: rooms || "umumiy" }, eventId);
+      track("Lead", { content_name: apt || "Tamerlan", content_category: rooms || "umumiy" }, eventId);
       setDone({ name: name.trim(), phone: "+" + digits });
     } catch (e2) {
       setErr("Ariza yuborilmadi. Internetni tekshirib, qayta urinib ko'ring.");

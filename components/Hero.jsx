@@ -55,7 +55,7 @@ export default function Hero() {
             <h1 className="hero__title">
               {["Terrasali", "uylar,"].map((w, i) => <span key={w} className="word-mask"><span style={{ "--i": i }}>{w}</span></span>)}
               <br />
-              <span className="word-mask"><span style={{ "--i": 2 }} className="accent">Boulevard City</span></span>
+              <span className="word-mask"><span style={{ "--i": 2 }} className="accent">Tamerlan</span></span>
             </h1>
             <p className="hero__lead">Podval avtoturargohi, basseyn va terrasali penthauslarga ega turar joy majmuasi. <b>Har bir xonadonni loyiha chizmasi asosida 3D ko'rinishda, ichidan ko'ring.</b></p>
             <div className="hero__actions">

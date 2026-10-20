@@ -180,7 +180,7 @@ export default function Page() {
       <footer className="footer">
         <div className="container footer__row">
           <a className="logo" href="#top"><span className="logo__mark" aria-hidden="true"><i /><i /><i /></span><span className="logo__txt">TAMERLAN</span></a>
-          <span>© 2026 Boulevard City · Samarqand</span>
+          <span>© 2026 Tamerlan · Samarqand</span>
           <span>Loyihachi: «Universal Proekt Plyus» MChJ</span>
         </div>
       </footer>
