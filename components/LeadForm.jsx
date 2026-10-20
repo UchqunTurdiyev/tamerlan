@@ -10,7 +10,12 @@ const fmtPhone = (raw) => {
   return d ? "+998 " + p.join(" ") : "";
 };
 
-export default function LeadForm() {
+const ROOMS = [["1 xonali", "1"], ["2 xonali", "2"], ["3 xonali", "3"], ["4 xonali", "4+"]];
+
+// variant="card" — hero ichidagi qisqa forma; standart — #ariza bo'limidagi to'liq forma (tanlangan xonadon shu yerga tushadi)
+export default function LeadForm({ variant }) {
+  const full = variant !== "card";
+  const idp = full ? "f" : "h";
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [apt, setApt] = useState("");
@@ -21,10 +26,11 @@ export default function LeadForm() {
   const [done, setDone] = useState(null);
 
   useEffect(() => {
-    const on = (e) => { setApt(e.detail.text || ""); if (e.detail.rooms) setRooms(e.detail.rooms); setTimeout(() => document.getElementById("fName")?.focus({ preventScroll: true }), 500); };
+    if (!full) return;
+    const on = (e) => { setApt(e.detail.text || ""); if (e.detail.rooms) setRooms(e.detail.rooms); setDone(null); setTimeout(() => document.getElementById("fName")?.focus({ preventScroll: true }), 700); };
     window.addEventListener("bc:apt", on);
     return () => window.removeEventListener("bc:apt", on);
-  }, []);
+  }, [full]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -48,46 +54,36 @@ export default function LeadForm() {
     } finally { setBusy(false); }
   };
 
-  const tel = process.env.NEXT_PUBLIC_PHONE, tg = process.env.NEXT_PUBLIC_TELEGRAM;
+  if (done) return (
+    <div className="lead lead__done" role="status">
+      <div className="lead__check"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg></div>
+      <h3>Rahmat, arizangiz qabul qilindi</h3>
+      <p>{done.name}, menejer {done.phone} raqamiga tez orada qo'ng'iroq qiladi.{apt ? ` Tanlov: ${apt}.` : ""}</p>
+      <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setDone(null); setName(""); setPhone(""); }}>Yana ariza qoldirish</button>
+    </div>
+  );
 
   return (
-    <section className="lead-s" id="ariza">
-      <div className="wrap lead-grid">
-        <div>
-          <div className="eyebrow">Bog'lanish</div>
-          <h2 style={{ marginTop: 12 }}>Narx va bo'sh xonadonlarni bilib oling</h2>
-          <p>Tanlagan xonadoningiz avtomatik qo'shiladi. Menejer qo'ng'iroq qilib, narx, to'lov shartlari va bo'sh qavatlar haqida ma'lumot beradi.</p>
-          <div className="addr">
-            <div><span>Manzil</span>Samarqand shahri, Xo'ja Ahror Valiy MFY, Muqimiy ko'chasi, 48</div>
-            {tel && <div><span>Telefon</span><a href={`tel:${tel.replace(/\s/g, "")}`}>{tel}</a></div>}
-            {tg && <div><span>Telegram</span><a href={`https://t.me/${tg.replace("@", "")}`} target="_blank" rel="noopener">@{tg.replace("@", "")}</a></div>}
-            <div><span>Xarita</span><a href="https://www.google.com/maps/search/?api=1&query=Samarqand%2C%20Muqimiy%20ko%27chasi%2048" target="_blank" rel="noopener">Google xaritada ochish ↗</a></div>
-            <div><span>Buyurtmachi</span>«BOULEVARD CITY» MChJ</div>
-          </div>
+    <form className="lead" onSubmit={submit} noValidate data-tilt={full ? undefined : "4"}>
+      <div className="lead__title">{full ? "Ariza qoldiring" : "Narx va bo'sh xonadonlarni bilib oling"}</div>
+      <p className="lead__sub">{full ? "Menejer qo'ng'iroq qilib, narx, to'lov shartlari va bo'sh qavatlarni aytib beradi." : "3 ta savol — menejer sizga qo'ng'iroq qiladi."}</p>
+      <label className="field" htmlFor={idp + "Name"}><span>Ismingiz</span><input id={idp + "Name"} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Ism" /></label>
+      <label className="field" htmlFor={idp + "Phone"}><span>Telefon raqamingiz</span><input id={idp + "Phone"} value={phone} onChange={(e) => setPhone(fmtPhone(e.target.value))} type="tel" inputMode="tel" autoComplete="tel" placeholder="+998 __ ___ __ __" /></label>
+      {full && <label className="field" htmlFor="fApt"><span>Tanlangan xonadon</span><input id="fApt" value={apt} onChange={(e) => setApt(e.target.value)} placeholder="Masalan: 4-blok, 2-qavat, 3-xonadon" /></label>}
+      <fieldset className="field">
+        <legend>Necha xonali uy kerak?</legend>
+        <div className="chips chips--4">
+          {ROOMS.map(([v, t]) => (
+            <button key={v} type="button" className={"chip" + (rooms === v ? " is-active" : "")} aria-pressed={rooms === v} onClick={() => setRooms(rooms === v ? "" : v)}>
+              <span className="chip__bg" /><span className="chip__label"><b>{t}</b> xona</span>
+            </button>
+          ))}
         </div>
-        <div>
-          {done ? (
-            <div className="ok" role="status"><b>Rahmat, arizangiz qabul qilindi</b><span>{done.name}, menejer {done.phone} raqamiga tez orada qo'ng'iroq qiladi.{apt ? ` Tanlov: ${apt}.` : ""}</span></div>
-          ) : (
-            <form onSubmit={submit} noValidate>
-              <div className="row2">
-                <label htmlFor="fName">Ismingiz<input id="fName" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Ism" /></label>
-                <label htmlFor="fPhone">Telefon raqamingiz<input id="fPhone" value={phone} onChange={(e) => setPhone(fmtPhone(e.target.value))} type="tel" inputMode="tel" autoComplete="tel" placeholder="+998 __ ___ __ __" /></label>
-              </div>
-              <label htmlFor="fApt">Tanlangan xonadon<input id="fApt" value={apt} onChange={(e) => setApt(e.target.value)} placeholder="Masalan: 4-blok, 2-qavat, 3-xonadon" /></label>
-              <label htmlFor="fRooms">Necha xonali uy kerak?
-                <select id="fRooms" value={rooms} onChange={(e) => setRooms(e.target.value)}>
-                  <option value="">Farqi yo'q</option><option>1 xonali</option><option>2 xonali</option><option>3 xonali</option><option>4 xonali</option>
-                </select>
-              </label>
-              <input className="hp" tabIndex={-1} autoComplete="off" aria-hidden="true" value={hp} onChange={(e) => setHp(e.target.value)} name="website" />
-              <div className="err" role="alert">{err}</div>
-              <button className="btn btn-p" type="submit" disabled={busy}>{busy ? "Yuborilmoqda…" : "Ariza qoldirish"}</button>
-              <p className="note">Ma'lumotlaringiz uchinchi shaxslarga berilmaydi.</p>
-            </form>
-          )}
-        </div>
-      </div>
-    </section>
+      </fieldset>
+      <input className="hp" tabIndex={-1} autoComplete="off" aria-hidden="true" value={hp} onChange={(e) => setHp(e.target.value)} name="website" />
+      {err && <div className="lead__error" role="alert">{err}</div>}
+      <button className="btn btn--green btn--lg btn--block btn--shine" type="submit" disabled={busy}>{busy ? <><span className="spin" />Yuborilmoqda…</> : <>Ariza qoldirish <span aria-hidden="true">→</span></>}</button>
+      <p className="lead__note"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 018 0v4" /></svg>Ma'lumotlaringiz uchinchi shaxslarga berilmaydi</p>
+    </form>
   );
 }

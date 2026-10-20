@@ -60,49 +60,49 @@ export default function Selector() {
   const infoTotal = info ? r2(floor.info.reduce((s, i) => s + i[1], 0)) : 0;
 
   return (
-    <section className="sel" id="tanlash">
-      <div className="wrap">
+    <section className="section section--cream sel" id="tanlash">
+      <div className="container">
         <div className="sel-head">
-          <div>
+          <div data-r>
             <div className="eyebrow">Xonadonlar · 3D</div>
-            <h2>Blok, qavat va xonadonni tanlang</h2>
+            <h2 className="h2">Blok, qavat va <em>xonadonni</em> tanlang</h2>
           </div>
-          <p>Har bir xonadon loyiha eksplikatsiyasidagi xona maydonlari asosida 3D ko'rinishda ko'rsatiladi. Mebel va xonalar joylashuvi taxminiy, aniq chizma sotuv bo'limida.</p>
+          <p className="lead-text" data-r style={{ "--d": ".1s" }}>Har bir xonadon loyiha eksplikatsiyasidagi xona maydonlari asosida 3D ko'rinishda ko'rsatiladi. Mebel va xonalar joylashuvi taxminiy, aniq chizma sotuv bo'limida.</p>
         </div>
 
-        <div className="blocks" role="group" aria-label="Bloklar">
+        <div className="blocks" role="group" aria-label="Bloklar" data-r>
           {BLOCKS.map((b) => (
-            <button key={b.id} type="button" className="blk" aria-pressed={block === b} onClick={() => chooseBlock(b)}>
+            <button key={b.id} type="button" className={"blk" + (block === b ? " is-active" : "")} aria-pressed={block === b} onClick={() => chooseBlock(b)}>
               <b>{b.id}-blok</b><span>{b.tag}</span>
             </button>
           ))}
         </div>
 
         <div className="grid">
-          <div className="side">
+          <div className="side" data-r>
             <div>
               <div className="lbl-s">Qavat</div>
-              <div className="chips" role="group" aria-label="Qavatlar">
+              <div className="pills" role="group" aria-label="Qavatlar">
                 {block.floors.map((f) => (
-                  <button key={f.k} type="button" className="chip" aria-pressed={floor === f} onClick={() => chooseFloor(f)}>{f.label}</button>
+                  <button key={f.k} type="button" className={"pill" + (floor === f ? " is-active" : "")} aria-pressed={floor === f} onClick={() => chooseFloor(f)}>{f.label}</button>
                 ))}
               </div>
             </div>
             <div>
               <div className="lbl-s">Xonalar soni</div>
-              <div className="chips" role="group" aria-label="Xonalar soni">
+              <div className="pills" role="group" aria-label="Xonalar soni">
                 {RC_OPTS.map(([v, t]) => (
-                  <button key={v} type="button" className="chip" aria-pressed={rc === v} disabled={info || (v !== 0 && !hasRc.has(v))} onClick={() => chooseRc(v)}>{t}</button>
+                  <button key={v} type="button" className={"pill" + (rc === v ? " is-active" : "")} aria-pressed={rc === v} disabled={info || (v !== 0 && !hasRc.has(v))} onClick={() => chooseRc(v)}>{t}</button>
                 ))}
               </div>
             </div>
             <div>
               <div className="lbl-s">{info ? "Xonadonlar" : `Xonadonlar · ${list.length} ta`}</div>
-              <div className="cards">
+              <div className="cards" key={block.id + floor.k + rc}>
                 {info && <p className="empty">Bu qavatda turar joy yo'q.</p>}
-                {list.map((a) => (
-                  <button key={a.n} type="button" className="card" aria-pressed={apt === a} onClick={() => setApt(a)}>
-                    <span dangerouslySetInnerHTML={{ __html: planSVG(a) }} />
+                {list.map((a, i) => (
+                  <button key={a.n} type="button" className="card" style={{ "--i": i }} aria-pressed={apt === a} onClick={() => setApt(a)}>
+                    <span className="card__plan" dangerouslySetInnerHTML={{ __html: planSVG(a) }} />
                     <span><span className="t">{a.n}-xonadon</span><br /><span className="s">{a.rc} xonali{a.mir ? " · ko'zgu reja" : ""}</span></span>
                     <span className="a">{fmtN(a.area)} m²{a.ter > 0 && <small>+ {fmtN(a.ter)} m² terrasa</small>}</span>
                   </button>
@@ -112,35 +112,37 @@ export default function Selector() {
           </div>
 
           <div className="main">
-            <div className={"stage" + (labels ? "" : " nolabels")}>
-              <Viewer3D apt={info ? null : apt} onReady={(v) => (viewer.current = v)} onUser={() => setAuto(false)} />
-              <div className="stage-tag mono">{block.id}-blok · {floor.label}{apt && !info ? ` · №${apt.n}` : ""}</div>
-              {!info && (
-                <div className="tools">
-                  <button type="button" aria-pressed={auto} onClick={toggleAuto}>Aylantirish</button>
-                  <button type="button" aria-pressed={topView} onClick={toggleTop}>Yuqoridan</button>
-                  <button type="button" aria-pressed={labels} onClick={() => setLabels(!labels)}>Yorliqlar</button>
-                </div>
-              )}
-              {!info && <div className="stage-hint">Suring — aylantirish · g'ildirak yoki ikki barmoq — yaqinlashtirish</div>}
-              {info && (
-                <div className="info">
-                  <div className="eyebrow">{block.id}-blok · {floor.label}</div>
-                  <div className="big">{floor.info.length === 1 ? floor.info[0][0] : floor.info[0][0].replace(/ \d+$/, "") + "lar"}</div>
-                  <div className="big mono" style={{ fontSize: "clamp(26px,3.4vw,40px)" }}>{fmtN(infoTotal)} m²</div>
-                  <p>{floor.note}</p>
-                </div>
-              )}
+            <div className="apt__stage" data-r style={{ "--d": ".1s" }}>
+              <div className={"stage" + (labels ? "" : " nolabels")}>
+                <Viewer3D apt={info ? null : apt} onReady={(v) => (viewer.current = v)} onUser={() => setAuto(false)} />
+                <div className="stage-tag"><span className="pulse-dot" />{block.id}-blok · {floor.label}{apt && !info ? ` · №${apt.n}` : ""}</div>
+                {!info && (
+                  <div className="tools">
+                    <button type="button" aria-pressed={auto} className={auto ? "is-active" : ""} onClick={toggleAuto}>Aylantirish</button>
+                    <button type="button" aria-pressed={topView} className={topView ? "is-active" : ""} onClick={toggleTop}>Yuqoridan</button>
+                    <button type="button" aria-pressed={labels} className={labels ? "is-active" : ""} onClick={() => setLabels(!labels)}>Yorliqlar</button>
+                  </div>
+                )}
+                {!info && <div className="stage-hint">↻ Suring — aylantirish · g'ildirak — yaqinlashtirish</div>}
+                {info && (
+                  <div className="info">
+                    <div className="eyebrow">{block.id}-blok · {floor.label}</div>
+                    <div className="big">{floor.info.length === 1 ? floor.info[0][0] : floor.info[0][0].replace(/ \d+$/, "") + "lar"}</div>
+                    <div className="big big--num">{fmtN(infoTotal)} m²</div>
+                    <p>{floor.note}</p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {info ? (
-              <div className="detail">
+              <div className="detail" key={"i" + block.id + floor.k}>
                 <div>
                   <div className="eyebrow">{block.id}-blok</div>
                   <h3>{floor.label}</h3>
                   <p className="note" style={{ marginTop: 0 }}>{floor.note} Ijara yoki sotib olish shartlarini sotuv bo'limidan bilib oling.</p>
                   <div style={{ marginTop: 18 }}>
-                    <button type="button" className="btn btn-p" onClick={() => pickApt(`${block.id}-blok, ${floor.label}: ${floor.info.map((i) => i[0]).join(", ")}`, "")}>Ma'lumot olish</button>
+                    <button type="button" className="btn btn--green" onClick={() => pickApt(`${block.id}-blok, ${floor.label}: ${floor.info.map((i) => i[0]).join(", ")}`, "")}>Ma'lumot olish →</button>
                   </div>
                 </div>
                 <div style={{ minWidth: 0 }}>
@@ -151,22 +153,26 @@ export default function Selector() {
                 </div>
               </div>
             ) : apt && (
-              <div className="detail">
-                <div>
+              <div className="detail" key={aptTitle}>
+                <div className="detail__main">
                   <div className="eyebrow">{block.id}-blok · {floor.label}</div>
-                  <h3>{apt.n}-xonadon, {apt.rc} xonali</h3>
-                  <div className="facts">
-                    <div><span>Umumiy maydon</span><b>{fmtN(apt.area)} m²</b></div>
-                    {apt.ter > 0 && <div><span>Terrasa</span><b>{fmtN(apt.ter)} m²</b></div>}
-                    <div><span>Xonalar</span><b>{apt.rc}</b></div>
+                  <h3>{apt.n}-xonadon <small>{apt.rc} xonali</small></h3>
+                  <div className="apt__price">
+                    <span>Umumiy maydon</span>
+                    <b>{fmtN(apt.area)}<em>m²</em></b>
                   </div>
-                  <button type="button" className="btn btn-p" onClick={() => pickApt(`${aptTitle} (${fmtN(apt.area)} m²)`, apt.rc >= 4 ? "4 xonali" : `${apt.rc} xonali`)}>Shu xonadon narxini bilish</button>
+                  <ul className="apt__facts">
+                    <li><span>Xonalar</span><b>{apt.rc}</b></li>
+                    <li><span>Terrasa</span><b>{apt.ter > 0 ? `${fmtN(apt.ter)} m²` : "—"}</b></li>
+                    <li><span>Reja</span><b>{apt.mir ? "Ko'zgu" : "Asosiy"}</b></li>
+                  </ul>
+                  <button type="button" className="btn btn--gold btn--block btn--shine" onClick={() => pickApt(`${aptTitle} (${fmtN(apt.area)} m²)`, apt.rc >= 4 ? "4 xonali" : `${apt.rc} xonali`)}>Shu xonadon narxini bilish →</button>
                   <p className="note">Maydonlar loyiha eksplikatsiyasidan olingan. 3D maketdagi xonalar joylashuvi va mebel taxminiy.</p>
                 </div>
                 <div style={{ minWidth: 0 }}>
                   <table className="ex"><caption>Eksplikatsiya, m²</caption><tbody>
                     {apt.rooms.filter((r) => r.t !== "t").map((r, i) => (
-                      <tr key={i}><td>{i + 1}</td><td><span className="dot" style={{ background: `var(--pl-${KIND[r.t]})` }} />{RN[r.t]}</td><td>{fmtN(r.a)}</td></tr>
+                      <tr key={i} style={{ "--i": i }}><td>{i + 1}</td><td><span className="dot" style={{ background: `var(--pl-${KIND[r.t]})` }} />{RN[r.t]}</td><td>{fmtN(r.a)}</td></tr>
                     ))}
                     <tr className="tot"><td></td><td>Umumiy maydon</td><td>{fmtN(apt.area)}</td></tr>
                     {apt.rooms.filter((r) => r.t === "t").map((r, i) => (

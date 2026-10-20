@@ -1,10 +1,10 @@
-import { Marcellus, Manrope, IBM_Plex_Mono } from "next/font/google";
+import { Montserrat, Lora } from "next/font/google";
 import MetaPixel from "@/components/MetaPixel";
+import Motion from "@/components/Motion";
 import "./globals.css";
 
-const display = Marcellus({ subsets: ["latin", "latin-ext"], weight: "400", variable: "--font-display", display: "swap" });
-const body = Manrope({ subsets: ["latin", "latin-ext", "cyrillic"], weight: ["400", "500", "600", "700"], variable: "--font-body", display: "swap" });
-const mono = IBM_Plex_Mono({ subsets: ["latin", "latin-ext"], weight: ["400", "500"], variable: "--font-mono", display: "swap" });
+const sans = Montserrat({ subsets: ["latin", "latin-ext", "cyrillic"], variable: "--font-sans", display: "swap" });
+const serif = Lora({ subsets: ["latin", "latin-ext", "cyrillic"], style: "italic", weight: ["500", "600"], variable: "--font-serif", display: "swap" });
 
 const site = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
@@ -15,13 +15,15 @@ export const metadata = {
   openGraph: { title: "Boulevard City — Samarqand", description: "Xonadonlarni 3D ko'rinishda tanlang. Muqimiy ko'chasi, 48.", locale: "uz_UZ", type: "website" },
 };
 
-export const viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: "#1e3d8c" };
+export const viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: "#032a25" };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="uz" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+    <html lang="uz" className={`${sans.variable} ${serif.variable}`} suppressHydrationWarning>
       <body>
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
         {children}
+        <Motion />
         <MetaPixel />
       </body>
     </html>
