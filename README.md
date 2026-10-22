@@ -1,6 +1,6 @@
 # Boulevard City — sayt
 
-Next.js 14 (App Router). Mijoz blok, qavat va xonadonni 3D ko'rinishda tanlaydi va ariza qoldiradi. Ariza Telegram botga tushadi. Sotuvchi tugma bosib sotuv summasini yozadi va Purchase hodisasi summa bilan Meta Conversions API'ga yuboriladi.
+Next.js 14 (App Router). Mijoz blok va qavatni tanlaydi, xonadonni chizmadan qurilgan 3D maketda (devorlar, derazalar, eshiklar, pol va mebel) yoki 2D rejada ko'radi va ariza qoldiradi. Ariza Telegram botga tushadi. Sotuvchi tugma bosib sotuv summasini yozadi va Purchase hodisasi summa bilan Meta Conversions API'ga yuboriladi.
 
 ## Hodisalar oqimi
 
@@ -43,8 +43,15 @@ npm run dev
 
 ## Fayllar
 
-- `lib/data.js` — bloklar, qavatlar, xonadonlar (chizmalar eksplikatsiyasidan). Narx qo'shish yoki xonadonni o'zgartirish shu yerda.
-- `lib/three-scene.js` — 3D maket (three.js).
+- `lib/data.js` — bloklar, qavatlar, xonadonlar (chizmalar eksplikatsiyasidan). Xonadonni o'zgartirish shu yerda.
+- `public/plans/*.webp`, `public/plans/*.3d.json`, `lib/plans.json` — qavat rejalari, 3D uchun devor/deraza/eshik/xona o'rinlari va har xonadonning rejadagi joyi. PDF'lardan avtomatik olinadi:
+  ```bash
+  pip install pymupdf pillow numpy scipy scikit-image
+  python3 scripts/plans.py ~/Downloads   # 6-blok.pdf va 8-blok.pdf turgan papka
+  ```
+  `lib/data.js` yoki chizmalar o'zgarsa qayta ishga tushiring.
+- `components/PlanViewer.jsx` — 2D reja ko'rgich (surish, kattalashtirish, xonadonga yaqinlashish).
+- `components/Plan3D.jsx`, `lib/scene3d.js` — 3D maket (three.js, faqat 3D ochilganda yuklanadi).
 - `app/api/lead` — arizani qabul qilish, CAPI Lead, Telegram.
 - `app/api/telegram` — bot tugmalari va sotuv summasi, CAPI Purchase.
 # tamerlan

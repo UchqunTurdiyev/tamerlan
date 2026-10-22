@@ -25,7 +25,8 @@ export async function POST(req) {
   const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || req.headers.get("x-real-ip") || "";
   const ua = clip(req.headers.get("user-agent"), 400);
 
-  // IP bo'yicha cheklov: daqiqasiga 5 ta ariza
+  // IP bo'yicha cheklov: daqiqasiga 5 ta ariza. Redis ishlamasa ham ariza yo'qolmasin — Telegram'ga baribir boradi
+  let store = true;
   try {
     const k = `bc:rl:${ip || "x"}`;
     const n = await redis().incr(k);
@@ -33,7 +34,7 @@ export async function POST(req) {
     if (n > 5) return NextResponse.json({ ok: false, error: "Juda ko'p urinish" }, { status: 429 });
   } catch (e) {
     console.error("redis", e.message);
-    return NextResponse.json({ ok: false, error: "server sozlanmagan" }, { status: 500 });
+    store = false;
   }
 
   const lead = {
@@ -62,6 +63,9 @@ export async function POST(req) {
     else console.error("Telegram:", r.description);
   }
 
-  await saveLead(lead);
+  if (store) {
+    try { await saveLead(lead); } catch (e) { console.error("redis save", e.message); }
+  }
+  if (!lead.tg && !store) return NextResponse.json({ ok: false, error: "server sozlanmagan" }, { status: 500 });
   return NextResponse.json({ ok: true, id: lead.id });
 }

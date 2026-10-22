@@ -69,7 +69,7 @@ export default function LeadForm({ variant }) {
       <p className="lead__sub">{full ? "Menejer qo'ng'iroq qilib, narx, to'lov shartlari va bo'sh qavatlarni aytib beradi." : "3 ta savol — menejer sizga qo'ng'iroq qiladi."}</p>
       <label className="field" htmlFor={idp + "Name"}><span>Ismingiz</span><input id={idp + "Name"} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Ism" /></label>
       <label className="field" htmlFor={idp + "Phone"}><span>Telefon raqamingiz</span><input id={idp + "Phone"} value={phone} onChange={(e) => setPhone(fmtPhone(e.target.value))} type="tel" inputMode="tel" autoComplete="tel" placeholder="+998 __ ___ __ __" /></label>
-      {full && <label className="field" htmlFor="fApt"><span>Tanlangan xonadon</span><input id="fApt" value={apt} onChange={(e) => setApt(e.target.value)} placeholder="Masalan: 4-blok, 2-qavat, 3-xonadon" /></label>}
+      {full && <label className="field" htmlFor="fApt"><span>Tanlangan xonadon</span><input id="fApt" value={apt} onChange={(e) => setApt(e.target.value)} placeholder="Masalan: 6-blok, 2-qavat, 3-xonadon" /></label>}
       <fieldset className="field">
         <legend>Necha xonali uy kerak?</legend>
         <div className="chips chips--4">

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-const LINKS = [["#majmua", "Majmua"], ["#tanlash", "Xonadonlar"], ["#bloklar", "Bloklar"], ["#qulayliklar", "Qulayliklar"], ["#ariza", "Bog'lanish"]];
+const LINKS = [["#tanlash", "Xonadonlar"], ["#bloklar", "Bloklar"], ["#qulayliklar", "Qulayliklar"], ["#ariza", "Bog'lanish"]];
 
 export default function Header() {
   const [open, setOpen] = useState(false);

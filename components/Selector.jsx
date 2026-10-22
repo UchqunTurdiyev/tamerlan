@@ -1,13 +1,22 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import Viewer3D from "./Viewer3D";
-import { BLOCKS, RN, KIND, fmtN } from "@/lib/data";
-import { planSVG } from "@/lib/plan";
+import PlanViewer from "./PlanViewer";
+import Plan3D from "./Plan3D";
+import { BLOCKS, ALL_APTS, RN, KIND, fmtN } from "@/lib/data";
+import PLANS from "@/lib/plans.json";
 import { track } from "@/lib/pixel";
 
 const r2 = (n) => Math.round(n * 100) / 100;
 const RC_OPTS = [[0, "Hammasi"], [1, "1"], [2, "2"], [3, "3"], [4, "4+"]];
+const rcOf = (a) => Math.min(4, a.rc);
 const firstFloor = (b) => b.floors.find((x) => x.k === "2") || b.floors.find((x) => x.apts);
+const balc = (a) => r2(a.rooms.filter((r) => r.t === "bl").reduce((s, r) => s + r.a, 0));
+// xonadon turlari: necha xonali — nechta, qancha maydon
+const TYPES = [1, 2, 3, 4].map((k) => {
+  const l = ALL_APTS.filter((a) => rcOf(a) === k);
+  return { k, n: l.length, min: Math.min(...l.map((a) => a.area)), max: Math.max(...l.map((a) => a.area)) };
+}).filter((t) => t.n);
+const webgl = () => { try { const c = document.createElement("canvas"); return !!(c.getContext("webgl2") || c.getContext("webgl")); } catch (e) { return false; } };
 
 export function pickApt(text, rooms) {
   window.dispatchEvent(new CustomEvent("bc:apt", { detail: { text, rooms } }));
@@ -18,43 +27,42 @@ export default function Selector() {
   const [block, setBlock] = useState(BLOCKS[0]);
   const [floor, setFloor] = useState(firstFloor(BLOCKS[0]));
   const [rc, setRc] = useState(0);
-  const [apt, setApt] = useState(firstFloor(BLOCKS[0]).apts[0]);
-  const [auto, setAuto] = useState(true);
-  const [topView, setTopView] = useState(false);
-  const [labels, setLabels] = useState(true);
-  const viewer = useRef(null);
+  const [n, setN] = useState(null);
+  const [mode, setMode] = useState("3d");
+  useEffect(() => { if (!webgl()) setMode("2d"); }, []);
   const seen = useRef(new Set());
 
-  const list = useMemo(() => (floor.apts || []).filter((a) => !rc || Math.min(4, a.rc) === rc), [floor, rc]);
-  const hasRc = useMemo(() => new Set((floor.apts || []).map((a) => Math.min(4, a.rc))), [floor]);
+  const apts = floor.apts || [];
+  const list = useMemo(() => apts.filter((a) => !rc || rcOf(a) === rc), [apts, rc]);
+  const hasRc = useMemo(() => new Set(apts.map(rcOf)), [apts]);
+  const apt = apts.find((a) => a.n === n) || null;
+  const plan = PLANS[`${block.id}-${floor.k}`];
 
-  const chooseFloor = (f, keepRc = rc) => {
+  const chooseFloor = (f) => {
     setFloor(f);
-    let r = keepRc;
-    if (r && !(f.apts || []).some((a) => Math.min(4, a.rc) === r)) r = 0;
-    setRc(r);
-    const l = (f.apts || []).filter((a) => !r || Math.min(4, a.rc) === r);
-    setApt(l[0] || null);
+    if (rc && !(f.apts || []).some((a) => rcOf(a) === rc)) setRc(0);
+    setN(null);
   };
   const chooseBlock = (b) => { setBlock(b); chooseFloor(firstFloor(b)); };
-  const chooseRc = (v) => { setRc(v); const l = (floor.apts || []).filter((a) => !v || Math.min(4, a.rc) === v); if (!l.includes(apt)) setApt(l[0] || null); };
+  const chooseRc = (v) => { setRc(v); if (apt && v && rcOf(apt) !== v) setN(null); };
+  // tur kartasi: joriy qavatda bunday xonadon bo'lmasa, bor joyga o'tamiz
+  const has = (f, v) => (f.apts || []).some((a) => rcOf(a) === v);
+  const chooseType = (v) => {
+    if (!v || has(floor, v)) return chooseRc(v);
+    const b = (block.floors.some((f) => has(f, v)) ? block : BLOCKS.find((x) => x.floors.some((f) => has(f, v))));
+    const f = b.floors.find((x) => has(x, v));
+    setBlock(b); setFloor(f); setRc(v); setN(null);
+  };
 
   const aptTitle = apt ? `${block.id}-blok, ${floor.label}, ${apt.n}-xonadon` : "";
 
   // Mijoz qaysi xonadonni ko'rganini Meta'ga ViewContent sifatida yuborish
   useEffect(() => {
-    if (!apt) return;
-    const key = aptTitle;
-    if (seen.current.has(key) || seen.current.size === 0) { seen.current.add(key); return; }
-    seen.current.add(key);
+    if (!apt || seen.current.has(aptTitle)) return;
+    seen.current.add(aptTitle);
     track("ViewContent", { content_name: aptTitle, content_category: `${apt.rc} xonali`, content_ids: [`${block.id}-${floor.k}-${apt.n}`], content_type: "home_listing" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apt]);
-
-  useEffect(() => { setAuto(true); setTopView(false); }, [apt]);
-
-  const toggleAuto = () => { const v = viewer.current; if (!v) return; const on = !auto; v.autoRotate = on; if (on) { v.home(); setTopView(false); } setAuto(on); };
-  const toggleTop = () => { const v = viewer.current; if (!v) return; const on = !topView; if (on) v.top(); else v.home(); setTopView(on); setAuto(false); };
+  }, [aptTitle]);
 
   const info = !floor.apts;
   const infoTotal = info ? r2(floor.info.reduce((s, i) => s + i[1], 0)) : 0;
@@ -64,10 +72,19 @@ export default function Selector() {
       <div className="container">
         <div className="sel-head">
           <div data-r>
-            <div className="eyebrow">Xonadonlar · 3D</div>
+            <div className="eyebrow">Xonadonlar · 3D · haqiqiy rejalar</div>
             <h2 className="h2">Blok, qavat va <em>xonadonni</em> tanlang</h2>
           </div>
-          <p className="lead-text" data-r style={{ "--d": ".1s" }}>Har bir xonadon loyiha eksplikatsiyasidagi xona maydonlari asosida 3D ko'rinishda ko'rsatiladi. Mebel va xonalar joylashuvi taxminiy, aniq chizma sotuv bo'limida.</p>
+          <p className="lead-text" data-r style={{ "--d": ".1s" }}>Xonadonni tanlang — 3D maketda faqat shu xonadon qoladi: har bir xonasi, balkoni, deraza va eshiklari bilan.</p>
+        </div>
+
+        <div className="types" role="group" aria-label="Xonadon turlari" data-r>
+          {TYPES.map((t) => (
+            <button key={t.k} type="button" className={"type" + (rc === t.k ? " is-active" : "")} aria-pressed={rc === t.k} onClick={() => chooseType(rc === t.k ? 0 : t.k)}>
+              <b>{t.k === 4 ? "4+" : t.k} xonali</b>
+              <span>{t.n} ta · {Math.round(t.min)}–{Math.round(t.max)} m²</span>
+            </button>
+          ))}
         </div>
 
         <div className="blocks" role="group" aria-label="Bloklar" data-r>
@@ -88,71 +105,66 @@ export default function Selector() {
                 ))}
               </div>
             </div>
-            <div>
-              <div className="lbl-s">Xonalar soni</div>
-              <div className="pills" role="group" aria-label="Xonalar soni">
-                {RC_OPTS.map(([v, t]) => (
-                  <button key={v} type="button" className={"pill" + (rc === v ? " is-active" : "")} aria-pressed={rc === v} disabled={info || (v !== 0 && !hasRc.has(v))} onClick={() => chooseRc(v)}>{t}</button>
-                ))}
+            {!info && (
+              <div>
+                <div className="lbl-s">Xonalar soni</div>
+                <div className="pills" role="group" aria-label="Xonalar soni">
+                  {RC_OPTS.map(([v, t]) => (
+                    <button key={v} type="button" className={"pill" + (rc === v ? " is-active" : "")} aria-pressed={rc === v} disabled={v !== 0 && !hasRc.has(v)} onClick={() => chooseRc(v)}>{v ? `${t} xonali` : t}</button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
             <div>
-              <div className="lbl-s">{info ? "Xonadonlar" : `Xonadonlar · ${list.length} ta`}</div>
-              <div className="cards" key={block.id + floor.k + rc}>
-                {info && <p className="empty">Bu qavatda turar joy yo'q.</p>}
-                {list.map((a, i) => (
-                  <button key={a.n} type="button" className="card" style={{ "--i": i }} aria-pressed={apt === a} onClick={() => setApt(a)}>
-                    <span className="card__plan" dangerouslySetInnerHTML={{ __html: planSVG(a) }} />
-                    <span><span className="t">{a.n}-xonadon</span><br /><span className="s">{a.rc} xonali{a.mir ? " · ko'zgu reja" : ""}</span></span>
-                    <span className="a">{fmtN(a.area)} m²{a.ter > 0 && <small>+ {fmtN(a.ter)} m² terrasa</small>}</span>
-                  </button>
-                ))}
-              </div>
+              <div className="lbl-s">{info ? "Bu qavatda" : `Xonadonlar · ${list.length} ta`}</div>
+              {info ? (
+                <table className="ex"><tbody>
+                  {floor.info.map((i, k) => <tr key={k}><td>{k + 1}</td><td>{i[0]}</td><td>{fmtN(i[1])} m²</td></tr>)}
+                  {floor.info.length > 1 && <tr className="tot"><td></td><td>Jami</td><td>{fmtN(infoTotal)} m²</td></tr>}
+                </tbody></table>
+              ) : (
+                <div className="cards" key={block.id + floor.k + rc}>
+                  {list.map((a, i) => (
+                    <button key={a.n} type="button" className="card" style={{ "--i": i }} aria-pressed={n === a.n} onClick={() => setN(n === a.n ? null : a.n)}>
+                      <span className="card__n">{a.n}</span>
+                      <span><span className="t">{a.rc} xonali</span><br /><span className="s">{a.ter > 0 ? `+ ${fmtN(a.ter)} m² terrasa` : balc(a) > 0 ? "balkon bilan" : " "}</span></span>
+                      <span className="a">{fmtN(a.area)} m²</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
           <div className="main">
             <div className="apt__stage" data-r style={{ "--d": ".1s" }}>
-              <div className={"stage" + (labels ? "" : " nolabels")}>
-                <Viewer3D apt={info ? null : apt} onReady={(v) => (viewer.current = v)} onUser={() => setAuto(false)} />
-                <div className="stage-tag"><span className="pulse-dot" />{block.id}-blok · {floor.label}{apt && !info ? ` · №${apt.n}` : ""}</div>
-                {!info && (
-                  <div className="tools">
-                    <button type="button" aria-pressed={auto} className={auto ? "is-active" : ""} onClick={toggleAuto}>Aylantirish</button>
-                    <button type="button" aria-pressed={topView} className={topView ? "is-active" : ""} onClick={toggleTop}>Yuqoridan</button>
-                    <button type="button" aria-pressed={labels} className={labels ? "is-active" : ""} onClick={() => setLabels(!labels)}>Yorliqlar</button>
-                  </div>
-                )}
-                {!info && <div className="stage-hint">↻ Suring — aylantirish · g'ildirak — yaqinlashtirish</div>}
-                {info && (
+              <div className="stage">
+                {plan && !info ? (
+                  mode === "3d" && plan.g ? (
+                    <Plan3D plan={plan} apts={apts} selected={n} dim={(a) => rc && rcOf(a) !== rc} onPick={(v) => setN(v === n ? null : v)} onFail={() => setMode("2d")} />
+                  ) : (
+                    <PlanViewer plan={plan} apts={apts} selected={n} dim={(a) => rc && rcOf(a) !== rc} onPick={(v) => setN(v === n ? null : v)} />
+                  )
+                ) : (
                   <div className="info">
                     <div className="eyebrow">{block.id}-blok · {floor.label}</div>
-                    <div className="big">{floor.info.length === 1 ? floor.info[0][0] : floor.info[0][0].replace(/ \d+$/, "") + "lar"}</div>
+                    <div className="big">{floor.info.length === 1 ? floor.info[0][0] : "Tijorat va xizmat"}</div>
                     <div className="big big--num">{fmtN(infoTotal)} m²</div>
-                    <p>{floor.note}</p>
+                    <p>{floor.note} Ijara yoki sotib olish shartlarini sotuv bo'limidan bilib oling.</p>
+                    <button type="button" className="btn btn--green" onClick={() => pickApt(`${block.id}-blok, ${floor.label}: ${floor.info.map((i) => i[0]).join(", ")}`, "")}>Ma'lumot olish <span aria-hidden="true">→</span></button>
+                  </div>
+                )}
+                <div className="stage-tag"><span className="pulse-dot" />{block.id}-blok · {floor.label}{apt ? ` · №${apt.n} · ${apt.rc} xonali` : ""}</div>
+                {plan && !info && plan.g && (
+                  <div className="mode" role="group" aria-label="Ko'rinish">
+                    <button type="button" className={mode === "3d" ? "is-active" : ""} aria-pressed={mode === "3d"} onClick={() => setMode("3d")}>3D</button>
+                    <button type="button" className={mode === "2d" ? "is-active" : ""} aria-pressed={mode === "2d"} onClick={() => setMode("2d")}>Reja</button>
                   </div>
                 )}
               </div>
             </div>
 
-            {info ? (
-              <div className="detail" key={"i" + block.id + floor.k}>
-                <div>
-                  <div className="eyebrow">{block.id}-blok</div>
-                  <h3>{floor.label}</h3>
-                  <p className="note" style={{ marginTop: 0 }}>{floor.note} Ijara yoki sotib olish shartlarini sotuv bo'limidan bilib oling.</p>
-                  <div style={{ marginTop: 18 }}>
-                    <button type="button" className="btn btn--green" onClick={() => pickApt(`${block.id}-blok, ${floor.label}: ${floor.info.map((i) => i[0]).join(", ")}`, "")}>Ma'lumot olish →</button>
-                  </div>
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <table className="ex"><caption>Eksplikatsiya, m²</caption><tbody>
-                    {floor.info.map((i, k) => <tr key={k}><td>{k + 1}</td><td>{i[0]}</td><td>{fmtN(i[1])}</td></tr>)}
-                    <tr className="tot"><td></td><td>Jami</td><td>{fmtN(infoTotal)}</td></tr>
-                  </tbody></table>
-                </div>
-              </div>
-            ) : apt && (
+            {apt ? (
               <div className="detail" key={aptTitle}>
                 <div className="detail__main">
                   <div className="eyebrow">{block.id}-blok · {floor.label}</div>
@@ -163,14 +175,14 @@ export default function Selector() {
                   </div>
                   <ul className="apt__facts">
                     <li><span>Xonalar</span><b>{apt.rc}</b></li>
-                    <li><span>Terrasa</span><b>{apt.ter > 0 ? `${fmtN(apt.ter)} m²` : "—"}</b></li>
-                    <li><span>Reja</span><b>{apt.mir ? "Ko'zgu" : "Asosiy"}</b></li>
+                    <li><span>{apt.ter > 0 ? "Terrasa" : "Balkon"}</span><b>{apt.ter > 0 ? `${fmtN(apt.ter)} m²` : balc(apt) > 0 ? `${fmtN(balc(apt))} m²` : "—"}</b></li>
+                    <li><span>Qavat</span><b>{floor.k === "P" ? "Penthaus" : floor.k}</b></li>
                   </ul>
-                  <button type="button" className="btn btn--gold btn--block btn--shine" onClick={() => pickApt(`${aptTitle} (${fmtN(apt.area)} m²)`, apt.rc >= 4 ? "4 xonali" : `${apt.rc} xonali`)}>Shu xonadon narxini bilish →</button>
-                  <p className="note">Maydonlar loyiha eksplikatsiyasidan olingan. 3D maketdagi xonalar joylashuvi va mebel taxminiy.</p>
+                  <button type="button" className="btn btn--gold btn--block btn--shine" onClick={() => pickApt(`${aptTitle} (${fmtN(apt.area)} m²)`, apt.rc >= 4 ? "4 xonali" : `${apt.rc} xonali`)}>Shu xonadon narxini bilish <span aria-hidden="true">→</span></button>
+                  {plan && <a className="note note--link" href={plan.src} target="_blank" rel="noopener">Qavat rejasini to'liq o'lchamda ochish ↗</a>}
                 </div>
                 <div style={{ minWidth: 0 }}>
-                  <table className="ex"><caption>Eksplikatsiya, m²</caption><tbody>
+                  <table className="ex"><caption>Xonalar, m²</caption><tbody>
                     {apt.rooms.filter((r) => r.t !== "t").map((r, i) => (
                       <tr key={i} style={{ "--i": i }}><td>{i + 1}</td><td><span className="dot" style={{ background: `var(--pl-${KIND[r.t]})` }} />{RN[r.t]}</td><td>{fmtN(r.a)}</td></tr>
                     ))}
@@ -181,6 +193,8 @@ export default function Selector() {
                   </tbody></table>
                 </div>
               </div>
+            ) : !info && (
+              <p className="pick-hint">Rejadagi raqamni yoki chapdagi ro'yxatdan xonadonni tanlang.</p>
             )}
           </div>
         </div>

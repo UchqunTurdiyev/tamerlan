@@ -2,12 +2,12 @@ import LeadForm from "./LeadForm";
 import { BLOCKS, ALL_APTS } from "@/lib/data";
 
 const areas = ALL_APTS.map((a) => a.area);
-const maxTer = Math.max(...ALL_APTS.map((a) => a.ter));
+const maxBal = Math.max(...ALL_APTS.map((a) => a.rooms.filter((r) => r.t === "bl").reduce((s, r) => s + r.a, 0)));
 const STATS = [
   [<span key="a" data-count={ALL_APTS.length}>0</span>, "xonadon chizmalarda"],
   [<span key="b" data-count={BLOCKS.length}>0</span>, "turar joy bloki"],
   [`${Math.round(Math.min(...areas))}–${Math.round(Math.max(...areas))}`, "m², xonadon maydoni"],
-  [<span key="d" data-count={maxTer} data-dec="2">0</span>, "m² gacha terrasa"],
+  [<span key="d" data-count={maxBal} data-dec="2">0</span>, "m² gacha balkon"],
 ];
 
 // Fon: chizilgan shahar silueti, binolar pastdan o'sib chiqadi, derazalarda chiroq yonadi
@@ -53,18 +53,19 @@ export default function Hero() {
           <div>
             <div className="eyebrow eyebrow--light hero__eyebrow"><span className="pulse-dot" />Samarqand · Muqimiy ko'chasi, 48</div>
             <h1 className="hero__title">
-              {["Terrasali", "uylar,"].map((w, i) => <span key={w} className="word-mask"><span style={{ "--i": i }}>{w}</span></span>)}
-              <br />
-              <span className="word-mask"><span style={{ "--i": 2 }} className="accent">Tamerlan</span></span>
+              {["Bulvar", "maydondan"].map((w, i) => <span key={w} className="word-mask"><span style={{ "--i": i }}>{w}</span></span>)}
+              <span className="word-mask"><span style={{ "--i": 2 }} className="accent">300 metr</span></span>
+              {["masofada", "joylashgan", "premium", "uylar"].map((w, i) => <span key={w} className="word-mask"><span style={{ "--i": 3 + i }}>{w}</span></span>)}
             </h1>
-            <p className="hero__lead">Podval avtoturargohi, basseyn va terrasali penthauslarga ega turar joy majmuasi. <b>Har bir xonadonni loyiha chizmasi asosida 3D ko'rinishda, ichidan ko'ring.</b></p>
+            <p className="hero__urge"><span className="pulse-dot" />Sotib olishga ulgurib qoling</p>
+            <p className="hero__lead">Tamerlan — yer osti avtoturargohi, garaj va penthaus qavatlar.</p>
             <div className="hero__actions">
-              <a className="btn btn--gold btn--lg btn--shine" href="#tanlash">Xonadonni 3D ko'rish <span aria-hidden="true">→</span></a>
+              <a className="btn btn--gold btn--lg btn--shine" href="#tanlash">Xonadonni 3D da ko'rish <span aria-hidden="true">→</span></a>
               <a className="btn btn--glass btn--lg" href="#ariza">Narx va to'lov shartlari</a>
             </div>
           </div>
           <div className="hero__form">
-            <div className="hero__badge"><span>Yangi</span>Har bir xonadon 3D da</div>
+            <div className="hero__badge"><span>{ALL_APTS.length} ta xonadon</span>Har biri 3D maketda</div>
             <LeadForm variant="card" />
           </div>
         </div>
@@ -72,7 +73,7 @@ export default function Hero() {
           {STATS.map(([b, s], i) => <div key={s} className="stat" data-r style={{ "--d": `${0.2 + i * 0.1}s` }}><b>{b}</b><span>{s}</span></div>)}
         </div>
       </div>
-      <a className="scroll-cue" href="#majmua" aria-label="Pastga"><span /></a>
+      <a className="scroll-cue" href="#tanlash" aria-label="Pastga"><span /></a>
     </section>
   );
 }
