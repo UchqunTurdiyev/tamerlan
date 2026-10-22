@@ -141,7 +141,6 @@ export default function Page() {
         <div className="container footer__row">
           <a className="logo" href="#top"><span className="logo__mark" aria-hidden="true"><i /><i /><i /></span><span className="logo__txt">TAMERLAN</span></a>
           <span>© 2026 Tamerlan · Samarqand</span>
-          <span>Loyihachi: «Universal Proekt Plyus» MChJ</span>
         </div>
       </footer>
       <a className="mcta btn btn--gold btn--shine" href="#ariza">Narxini bilish</a>
