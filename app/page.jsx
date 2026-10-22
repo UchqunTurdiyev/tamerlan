@@ -130,7 +130,6 @@ export default function Page() {
                 <div data-r style={{ "--d": ".2s" }}><span>Manzil</span>Samarqand shahri, Xo'ja Ahror Valiy MFY, Muqimiy ko'chasi, 48</div>
                 {tel && <div data-r style={{ "--d": ".26s" }}><span>Telefon</span><a href={`tel:${tel.replace(/\s/g, "")}`}>{tel}</a></div>}
                 {tg && <div data-r style={{ "--d": ".32s" }}><span>Telegram</span><a href={`https://t.me/${tg.replace("@", "")}`} target="_blank" rel="noopener">@{tg.replace("@", "")}</a></div>}
-                <div data-r style={{ "--d": ".38s" }}><span>Buyurtmachi</span>«BOULEVARD CITY» MChJ</div>
               </div>
               <a className="btn btn--glass" href="https://www.google.com/maps/search/?api=1&query=Samarqand%2C%20Muqimiy%20ko%27chasi%2048" target="_blank" rel="noopener" style={{ marginTop: 28 }} data-r>Google xaritada ochish ↗</a>
             </div>
