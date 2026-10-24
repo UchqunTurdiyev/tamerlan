@@ -8,7 +8,10 @@ export const dynamic = "force-dynamic";
 export async function GET(req) {
   const key = new URL(req.url).searchParams.get("key");
   if (!process.env.SETUP_KEY || key !== process.env.SETUP_KEY) return new NextResponse("forbidden", { status: 403 });
-  const base = (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/$/, "");
+  // Webhook shu link ochilgan domenga o'rnatiladi (NEXT_PUBLIC_SITE_URL eskirgan bo'lishi mumkin)
+  const h = req.headers;
+  const host = h.get("x-forwarded-host") || h.get("host");
+  const base = host ? `https://${host}` : (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/$/, "");
   const set = await tg.call("setWebhook", {
     url: `${base}/api/telegram`,
     secret_token: process.env.TELEGRAM_WEBHOOK_SECRET || undefined,
